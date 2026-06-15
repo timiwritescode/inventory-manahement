@@ -267,7 +267,7 @@
           <th class="col-cart">In carts<span class="th-sub">not yet ordered</span></th>
           <th class="col-res">Reserved<span class="th-sub">orders placed</span></th>
           <th class="col-avail">Available<span class="th-sub">can still sell</span></th>
-          <th class="col-reorder">Reorder at</th>
+          <!--<th class="col-reorder">Reorder at</th>-->
           <th class="col-status">Status</th>
         </tr>
       </thead>
@@ -443,13 +443,13 @@
         <td>${cartPill(v.inCart)}</td>
         <td>${resPill(v.reserved)}</td>
         <td class="${availCls}">${avail}</td>
-        <td>
-          <div style="display:flex;align-items:center;gap:5px">
-            <input class="reorder-input" type="number" min="0" value="${v.reorder}"
-              onchange="setReorder(${v.id},this.value)" aria-label="Reorder point">
-            <span style="font-size:11px;color:#b4b2a9">units</span>
-          </div>
-        </td>
+        <!--<td>-->
+        <!--  <div style="display:flex;align-items:center;gap:5px">-->
+        <!--    <input class="reorder-input" type="number" min="0" value="${v.reorder}"-->
+        <!--      onchange="setReorder(${v.id},this.value)" aria-label="Reorder point">-->
+        <!--    <span style="font-size:11px;color:#b4b2a9">units</span>-->
+        <!--  </div>-->
+        <!--</td>-->
         <td>${badgeHtml(v)}</td>
       </tr>`;
     }).join('');
