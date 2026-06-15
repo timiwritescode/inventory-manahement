@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory management — Classic crew-neck tee</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    color: #1a1a18;
+    background: #f5f4ef;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+  .page { max-width: 960px; margin: 0 auto; }
+
+  /* Topbar */
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .product-meta { display: flex; align-items: center; gap: 12px; }
+  .product-thumb {
+    width: 44px; height: 44px; border-radius: 8px;
+    background: #fff; border: 0.5px solid #dddcd6;
+    display: flex; align-items: center; justify-content: center;
+    color: #b4b2a9; font-size: 20px;
+  }
+  .product-name { font-size: 16px; font-weight: 500; color: #1a1a18; }
+  .product-sub { font-size: 12px; color: #73726c; margin-top: 2px; }
+  .topbar-actions { display: flex; gap: 8px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: 8px;
+    border: 0.5px solid #c8c7c0; background: none;
+    font-size: 13px; cursor: pointer; color: #1a1a18;
+    transition: background 0.12s; font-family: inherit;
+  }
+  .btn:hover { background: #f1f0eb; }
+  .btn-primary {
+    background: #1a1a18; color: #fff;
+    border-color: #1a1a18;
+  }
+  .btn-primary:hover { opacity: 0.88; background: #1a1a18; }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px; margin-bottom: 20px;
+  }
+  .stat {
+    background: #fff; border-radius: 8px;
+    border: 0.5px solid #dddcd6;
+    padding: 12px 14px;
+  }
+  .stat-label {
+    font-size: 11px; color: #73726c; margin-bottom: 4px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .stat-val { font-size: 22px; font-weight: 500; color: #1a1a18; }
+  .stat-val.green { color: #0f6e56; }
+  .stat-val.blue  { color: #185fa5; }
+  .stat-val.purple{ color: #3c3489; }
+
+  /* Filters */
+  .filters { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+  .filters input, .filters select {
+    padding: 7px 10px; border-radius: 8px;
+    border: 0.5px solid #c8c7c0; background: #fff;
+    font-size: 13px; color: #1a1a18; font-family: inherit;
+  }
+  .filters input { max-width: 220px; }
+  .filters input:focus, .filters select:focus {
+    outline: none; border-color: #888780;
+  }
+
+  /* Table */
+  .table-wrap {
+    border: 0.5px solid #dddcd6; border-radius: 12px;
+    overflow: hidden; background: #fff;
+  }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  thead th {
+    background: #f5f4ef; padding: 9px 12px; text-align: left;
+    font-size: 11px; font-weight: 500; color: #73726c;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    border-bottom: 0.5px solid #dddcd6;
+  }
+  .th-sub {
+    display: block; font-size: 10px; font-weight: 400;
+    color: #b4b2a9; text-transform: none;
+    letter-spacing: 0; margin-top: 1px;
+  }
+  tbody tr { border-bottom: 0.5px solid #eeeee9; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafaf7; }
+  tbody td { padding: 10px 12px; font-size: 13px; vertical-align: middle; }
+
+  /* Column widths */
+  .col-variant { width: 19%; }
+  .col-sku     { width: 14%; }
+  .col-qty     { width: 15%; }
+  .col-cart    { width: 10%; }
+  .col-res     { width: 10%; }
+  .col-avail   { width: 9%;  }
+  .col-reorder { width: 12%; }
+  .col-status  { width: 11%; }
+
+  /* Swatch */
+  .swatch {
+    display: inline-block; width: 12px; height: 12px;
+    border-radius: 50%; vertical-align: middle; margin-right: 5px;
+    border: 0.5px solid rgba(0,0,0,0.12);
+  }
+
+  /* SKU mono */
+  .sku { font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; color: #73726c; }
+
+  /* Qty cell */
+  .qty-cell { display: flex; align-items: center; gap: 5px; }
+  .qty-input {
+    width: 56px; padding: 5px 8px; border-radius: 8px;
+    border: 0.5px solid #c8c7c0; background: #fff;
+    font-size: 13px; text-align: center; color: #1a1a18;
+    font-family: inherit;
+  }
+  .qty-input:focus { outline: none; border-color: #888780; }
+  .icon-btn {
+    background: none; border: none; cursor: pointer;
+    color: #73726c; padding: 3px; border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 15px; transition: background 0.1s, color 0.1s;
+  }
+  .icon-btn:hover { color: #1a1a18; background: #f1f0eb; }
+
+  /* Demand bar */
+  .demand-bar {
+    height: 4px; border-radius: 2px; background: #eeeee9;
+    overflow: hidden; margin-top: 5px; width: 100%;
+  }
+  .demand-fill { height: 100%; border-radius: 2px; background: #378add; }
+
+  /* Reorder input */
+  .reorder-input {
+    width: 48px; padding: 5px 8px; border-radius: 8px;
+    border: 0.5px solid #c8c7c0; background: #fff;
+    font-size: 13px; text-align: center; color: #1a1a18;
+    font-family: inherit;
+  }
+  .reorder-input:focus { outline: none; border-color: #888780; }
+
+  /* Pills */
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 7px; border-radius: 10px;
+    font-size: 11px; font-weight: 500;
+  }
+  .pill-cart   { background: #e6f1fb; color: #0c447c; }
+  .pill-res    { background: #eeedfe; color: #3c3489; }
+  .pill-zero   { background: #f1f0eb; color: #b4b2a9; }
+
+  /* Available colors */
+  .avail-ok   { color: #0f6e56; font-weight: 500; }
+  .avail-low  { color: #854f0b; font-weight: 500; }
+  .avail-oos  { color: #a32d2d; font-weight: 500; }
+
+  /* Status badges */
+  .badge {
+    display: inline-block; padding: 2px 7px;
+    border-radius: 4px; font-size: 11px; font-weight: 500;
+  }
+  .badge-ok  { background: #eaf3de; color: #27500a; }
+  .badge-low { background: #faeeda; color: #633806; }
+  .badge-oos { background: #fcebeb; color: #791f1f; }
+
+  /* Bottom bar */
+  .bottom-bar {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-top: 14px;
+  }
+  .row-count { font-size: 12px; color: #73726c; }
+
+  /* Save bar */
+  .save-bar {
+    display: none; align-items: center; gap: 10px;
+    margin-top: 14px; padding: 12px 16px;
+    background: #f5f4ef; border: 0.5px solid #dddcd6;
+    border-radius: 12px;
+  }
+  .save-bar.visible { display: flex; }
+  .save-msg { flex: 1; font-size: 13px; color: #73726c; }
+
+  /* Modal */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.38);
+    align-items: center; justify-content: center;
+    z-index: 100;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px;
+    border: 0.5px solid #dddcd6;
+    padding: 24px; width: 340px;
+  }
+  .modal-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .modal-sub { font-size: 12px; color: #73726c; margin-bottom: 16px; }
+  .modal-field { margin-bottom: 12px; }
+  .modal-field label {
+    display: block; font-size: 12px; color: #73726c; margin-bottom: 4px;
+  }
+  .modal-field input, .modal-field select {
+    width: 100%; padding: 8px 10px; border-radius: 8px;
+    border: 0.5px solid #c8c7c0; background: #fff;
+    font-size: 13px; color: #1a1a18; font-family: inherit;
+  }
+  .modal-field input:focus, .modal-field select:focus {
+    outline: none; border-color: #888780;
+  }
+  .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .modal-actions .btn { flex: 1; justify-content: center; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="topbar">
+    <div class="product-meta">
+      <div class="product-thumb">
+        <i class="ti ti-shirt" aria-hidden="true"></i>
+      </div>
+      <div>
+        <div class="product-name">Classic crew-neck tee</div>
+        <div class="product-sub">6 variants &nbsp;·&nbsp; SKU prefix: TEE-CRW</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn" onclick="openAdjust()">
+        <i class="ti ti-edit" style="font-size:15px" aria-hidden="true"></i> Adjust stock
+      </button>
+      <button class="btn btn-primary" onclick="saveChanges()">
+        <i class="ti ti-check" style="font-size:15px" aria-hidden="true"></i> Save changes
+      </button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="filters">
+    <input type="text" placeholder="Search variants…" id="search-input" oninput="renderTable()">
+    <select id="status-filter" onchange="renderTable()">
+      <option value="">All statuses</option>
+      <option value="ok">In stock</option>
+      <option value="low">Low stock</option>
+      <option value="oos">Out of stock</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-variant">Variant</th>
+          <th class="col-sku">SKU</th>
+          <th class="col-qty">On hand<span class="th-sub">physical stock</span></th>
+          <th class="col-cart">In carts<span class="th-sub">not yet ordered</span></th>
+          <th class="col-res">Reserved<span class="th-sub">orders placed</span></th>
+          <th class="col-avail">Available<span class="th-sub">can still sell</span></th>
+          <th class="col-reorder">Reorder at</th>
+          <th class="col-status">Status</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <div class="bottom-bar">
+    <span class="row-count" id="row-count"></span>
+    <button class="btn">
+      <i class="ti ti-history" style="font-size:15px" aria-hidden="true"></i> View history
+    </button>
+  </div>
+
+  <div class="save-bar" id="save-bar">
+    <span class="save-msg">You have unsaved changes</span>
+    <button class="btn" onclick="discardChanges()">Discard</button>
+    <button class="btn btn-primary" onclick="saveChanges()">
+      <i class="ti ti-check" style="font-size:14px" aria-hidden="true"></i> Save
+    </button>
+  </div>
+
+</div>
+
+<!-- Adjust stock modal -->
+<div class="modal-bg" id="modal-bg" role="dialog" aria-modal="true" aria-labelledby="modal-title-el">
+  <div class="modal">
+    <div class="modal-title" id="modal-title-el">Adjust stock</div>
+    <div class="modal-sub">Add or remove units and record a reason</div>
+    <div class="modal-field">
+      <label for="adj-variant">Variant</label>
+      <select id="adj-variant"></select>
+    </div>
+    <div class="modal-field">
+      <label for="adj-type">Adjustment type</label>
+      <select id="adj-type">
+        <option value="add">Add stock (received / return)</option>
+        <option value="remove">Remove stock (damaged / loss)</option>
+        <option value="set">Set exact quantity</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label for="adj-qty">Quantity</label>
+      <input type="number" id="adj-qty" min="0" value="10">
+    </div>
+    <div class="modal-field">
+      <label for="adj-reason">Reason</label>
+      <select id="adj-reason">
+        <option>Purchase order received</option>
+        <option>Customer return</option>
+        <option>Stocktake correction</option>
+        <option>Damaged goods</option>
+        <option>Theft / shrinkage</option>
+        <option>Transfer in</option>
+        <option>Transfer out</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="applyAdjust()">Apply adjustment</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SWATCH_COLORS = {
+    Red:   '#e24b4a',
+    Blue:  '#378add',
+    White: '#e8e8e2',
+    Black: '#2c2c2a',
+  };
+
+  let variants = [
+    { id:0, color:'Red',   size:'S',  sku:'TEE-CRW-RED-S',  qty:42, inCart:7, reserved:5, reorder:10 },
+    { id:1, color:'Red',   size:'M',  sku:'TEE-CRW-RED-M',  qty:18, inCart:3, reserved:3, reorder:10 },
+    { id:2, color:'Red',   size:'L',  sku:'TEE-CRW-RED-L',  qty:7,  inCart:1, reserved:1, reorder:10 },
+    { id:3, color:'Blue',  size:'M',  sku:'TEE-CRW-BLU-M',  qty:0,  inCart:4, reserved:0, reorder:10 },
+    { id:4, color:'White', size:'S',  sku:'TEE-CRW-WHT-S',  qty:33, inCart:9, reserved:8, reorder:15 },
+    { id:5, color:'Black', size:'XL', sku:'TEE-CRW-BLK-XL', qty:5,  inCart:2, reserved:0, reorder:8  },
+  ];
+
+  function available(v) { return Math.max(0, v.qty - v.reserved); }
+
+  function status(v) {
+    if (v.qty === 0) return 'oos';
+    if (available(v) <= v.reorder) return 'low';
+    return 'ok';
+  }
+
+  function badgeHtml(v) {
+    const s = status(v);
+    if (s === 'oos') return '<span class="badge badge-oos">Out of stock</span>';
+    if (s === 'low') return '<span class="badge badge-low">Low stock</span>';
+    return '<span class="badge badge-ok">In stock</span>';
+  }
+
+  function cartPill(n) {
+    if (n === 0) return '<span class="pill pill-zero">0</span>';
+    return `<span class="pill pill-cart"><i class="ti ti-shopping-cart" style="font-size:11px" aria-hidden="true"></i>${n}</span>`;
+  }
+
+  function resPill(n) {
+    if (n === 0) return '<span class="pill pill-zero">0</span>';
+    return `<span class="pill pill-res"><i class="ti ti-lock" style="font-size:11px" aria-hidden="true"></i>${n}</span>`;
+  }
+
+  function demandBar(v) {
+    const demand = v.inCart + v.reserved;
+    const pct = v.qty > 0 ? Math.min(100, Math.round((demand / v.qty) * 100)) : 0;
+    return `<div class="demand-bar"><div class="demand-fill" style="width:${pct}%"></div></div>`;
+  }
+
+  function renderStats() {
+    const totalQty   = variants.reduce((a,v) => a + v.qty, 0);
+    const totalAvail = variants.reduce((a,v) => a + available(v), 0);
+    const totalCart  = variants.reduce((a,v) => a + v.inCart, 0);
+    const totalRes   = variants.reduce((a,v) => a + v.reserved, 0);
+    document.getElementById('stats').innerHTML = `
+      <div class="stat">
+        <div class="stat-label">Total on hand</div>
+        <div class="stat-val">${totalQty}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total available</div>
+        <div class="stat-val green">${totalAvail}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">In customer carts</div>
+        <div class="stat-val blue">${totalCart}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Reserved (orders)</div>
+        <div class="stat-val purple">${totalRes}</div>
+      </div>
+    `;
+  }
+
+  function getFiltered() {
+    const q  = document.getElementById('search-input').value.toLowerCase();
+    const sf = document.getElementById('status-filter').value;
+    return variants.filter(v => {
+      const label = `${v.color} / ${v.size}`.toLowerCase();
+      return (!q || label.includes(q) || v.sku.toLowerCase().includes(q))
+          && (!sf || status(v) === sf);
+    });
+  }
+
+  function renderTable() {
+    const filtered = getFiltered();
+    document.getElementById('table-body').innerHTML = filtered.map(v => {
+      const avail = available(v);
+      const swBorder = v.color === 'White' ? '#ccc' : 'transparent';
+      const availCls = avail === 0 ? 'avail-oos' : avail <= v.reorder ? 'avail-low' : 'avail-ok';
+      return `<tr>
+        <td>
+          <span class="swatch" style="background:${SWATCH_COLORS[v.color]};border-color:${swBorder}"></span>
+          ${v.color} / ${v.size}
+        </td>
+        <td class="sku">${v.sku}</td>
+        <td>
+          <div class="qty-cell">
+            <button class="icon-btn" onclick="nudge(${v.id},-1)" aria-label="Decrease quantity">
+              <i class="ti ti-minus" style="font-size:13px"></i>
+            </button>
+            <input class="qty-input" type="number" min="0" value="${v.qty}"
+              onchange="setQty(${v.id},this.value)" aria-label="Quantity on hand">
+            <button class="icon-btn" onclick="nudge(${v.id},1)" aria-label="Increase quantity">
+              <i class="ti ti-plus" style="font-size:13px"></i>
+            </button>
+          </div>
+          ${demandBar(v)}
+        </td>
+        <td>${cartPill(v.inCart)}</td>
+        <td>${resPill(v.reserved)}</td>
+        <td class="${availCls}">${avail}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:5px">
+            <input class="reorder-input" type="number" min="0" value="${v.reorder}"
+              onchange="setReorder(${v.id},this.value)" aria-label="Reorder point">
+            <span style="font-size:11px;color:#b4b2a9">units</span>
+          </div>
+        </td>
+        <td>${badgeHtml(v)}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('row-count').textContent =
+      `Showing ${filtered.length} of ${variants.length} variants`;
+  }
+
+  function nudge(id, delta) {
+    const v = variants.find(x => x.id === id);
+    v.qty = Math.max(0, v.qty + delta);
+    markDirty();
+  }
+  function setQty(id, val) {
+    const v = variants.find(x => x.id === id);
+    v.qty = Math.max(0, parseInt(val) || 0);
+    markDirty();
+  }
+  function setReorder(id, val) {
+    const v = variants.find(x => x.id === id);
+    v.reorder = Math.max(0, parseInt(val) || 0);
+    markDirty();
+  }
+  function markDirty() {
+    document.getElementById('save-bar').classList.add('visible');
+    renderStats();
+    renderTable();
+  }
+  function saveChanges() {
+    document.getElementById('save-bar').classList.remove('visible');
+  }
+  function discardChanges() {
+    document.getElementById('save-bar').classList.remove('visible');
+  }
+  function openAdjust() {
+    const sel = document.getElementById('adj-variant');
+    sel.innerHTML = variants.map(v =>
+      `<option value="${v.id}">${v.color} / ${v.size}</option>`
+    ).join('');
+    document.getElementById('modal-bg').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('modal-bg').classList.remove('open');
+  }
+  function applyAdjust() {
+    const id   = parseInt(document.getElementById('adj-variant').value);
+    const type = document.getElementById('adj-type').value;
+    const qty  = parseInt(document.getElementById('adj-qty').value) || 0;
+    const v    = variants.find(x => x.id === id);
+    if (type === 'add')    v.qty += qty;
+    else if (type === 'remove') v.qty = Math.max(0, v.qty - qty);
+    else                   v.qty = qty;
+    closeModal();
+    markDirty();
+  }
+
+  renderStats();
+  renderTable();
+</script>
+</body>
+</html>
